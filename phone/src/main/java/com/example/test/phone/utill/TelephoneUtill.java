@@ -13,44 +13,79 @@ public class TelephoneUtill {
 
 	public List<PhoneMnemonics> prepareList(String phoneNumber, int[] numberList) {
 		List<PhoneMnemonics> patternList = new ArrayList<PhoneMnemonics>();
-		char[] buffer = new char[numberList.length];
-		prepareMnemonics(numberList, buffer, 0, 0, patternList, phoneNumber);
+
+		int length = phoneNumber.length();
+
+		for (int i = 0; i < length; i++) {
+			char[] buffer = new char[i + 1];
+			int[] postion= new int[buffer.length];
+			prepareMnemonics(numberList, buffer, 0, 0, patternList, phoneNumber, postion);
+		}
 		return patternList;
+	}
+	
+	private String replacePhonenumber(String phoneNumber, char[] buffer, int[] postion) {
+		for(int i =0; i < postion.length; i++) {
+			phoneNumber = phoneNumber.substring(0, postion[i]) 
+		              + buffer[i]
+		              + phoneNumber.substring(postion[i] + 1); 
+		}
+		return phoneNumber;
 	}
 
 	private void prepareMnemonics(int[] a, char[] buffer, int aIndex, int bufferIndex, List<PhoneMnemonics> patternList,
-			String phoneNumber) {
-		if (bufferIndex >= buffer.length || aIndex >= a.length) {
+			String phoneNumber, int[] postion) {
+		if ( (bufferIndex >= buffer.length) || aIndex >= a.length) {
 			PhoneMnemonics phone = new PhoneMnemonics();
 			phone.setPhoneNumber(phoneNumber);
-			phone.setMnemonic(String.valueOf(buffer));
+			phone.setMnemonic(replacePhonenumber(phoneNumber,buffer, postion));
+			if(!patternList.contains(phone))
 			patternList.add(phone);
 			return;
+		} else if( bufferIndex > 0) {
+			aIndex ++;
 		}
-		char[] letters = getLetters(a[aIndex]);
-		if (letters.length == 0)
-			prepareMnemonics(a, buffer, aIndex + 1, bufferIndex, patternList, phoneNumber);
-		for (char letter : letters) {
-			buffer[bufferIndex] = letter;
-			prepareMnemonics(a, buffer, aIndex + 1, bufferIndex + 1, patternList, phoneNumber);
+		
+		while(aIndex < a.length) {
+			char[] letters = getLetters(a[aIndex]);
+			if (letters.length == 0) {
+				buffer[bufferIndex] = (char)(a[aIndex]+'0');    
+				postion= new int[buffer.length];
+				postion[bufferIndex] = aIndex;
+				 prepareMnemonics(a, buffer, aIndex, bufferIndex +1, patternList, phoneNumber, postion);
+			}
+				
+			for (char letter : letters) {
+				if(aIndex == 0) {
+					postion= new int[buffer.length];
+					buffer = new char[buffer.length];
+				}
+					
+				postion[bufferIndex] = aIndex;
+				buffer[bufferIndex] = letter;
+				prepareMnemonics(a, buffer, aIndex, bufferIndex + 1, patternList, phoneNumber, postion);
+			}
+			
+			aIndex ++;
+			
 		}
+	
 	}
 
 	public int[] convertStringToIntegerArray(String phoneNumber) throws Exception {
 		int[] numberList = null;
-				numberList = new int[phoneNumber.length()];
-				for (int i = 0; i < phoneNumber.length(); i++) {
-					Character c = phoneNumber.charAt(i);
-					numberList[i] = Integer.parseInt(c.toString());
-				}
-				return numberList;
-			
+		numberList = new int[phoneNumber.length()];
+		for (int i = 0; i < phoneNumber.length(); i++) {
+			Character c = phoneNumber.charAt(i);
+			numberList[i] = Integer.parseInt(c.toString());
+		}
+		return numberList;
+
 	}
-	
-	
+
 	public boolean isValidPhoneNumber(String phoneNumber) {
-		
-		return  Pattern.matches("[0-9]+", phoneNumber);
+
+		return Pattern.matches("[0-9]+", phoneNumber);
 	}
 
 	private char[] getLetters(int digit) {
